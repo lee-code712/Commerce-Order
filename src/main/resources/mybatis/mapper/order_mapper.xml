@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.digital.v3.sql.mapper.OrderMapper">
+
+	<!--  ============== OrderSheet 관련 질의문 ================  -->
+
+	<insert id="createOrderSheet" parameterType="OrderSheetVO">
+	    INSERT INTO ordersheet (orderid, personid, addressid, phoneid, createdate, updatedate)
+	    VALUES (#{orderId}, #{personId}, #{addressVo.addressId}, #{phoneVo.phoneId}, SYSDATE, SYSDATE)
+	</insert>
+	
+	<resultMap id="orderSheetMap" type="OrderSheetVO">
+		<id column="orderid" jdbcType="BIGINT" property="orderId" javaType="long" />
+		<result column="personid" jdbcType="BIGINT" property="personId" javaType="long" />
+		<association property="addressVo" column="addressid" javaType="AddressVO">
+			<id column="addressid" jdbcType="BIGINT" property="addressId" javaType="long" />
+			<result column="addressdetail" jdbcType="VARCHAR" property="addressDetail" javaType="String" />
+		</association>
+		<association property="phoneVo" column="phoneid" javaType="PhoneVO">
+			<id column="phoneid" jdbcType="BIGINT" property="phoneId" javaType="long" />
+			<result column="phonenumber" jdbcType="VARCHAR" property="phoneNumber" javaType="String" />
+		</association>
+		<collection property="partyProductVoList" ofType="PartyProductVO">
+			<id column="createdate" jdbcType="DATE" property="createDate" javaType="string" />
+			<result column="productid" jdbcType="BIGINT" property="productId" javaType="long" />
+			<result column="quantity" jdbcType="BIGINT" property="quantity" javaType="long" />
+		</collection>
+	</resultMap>
+	
+	<select id="getOrderSheetByPerson" parameterType="long" resultMap="orderSheetMap">
+		SELECT o.orderid, o.personid, 
+			a.addressid, a.addressdetail, ph.phoneid, ph.phonenumber,
+			pp.productid, pp.quantity, pp.createdate
+		FROM ordersheet o
+			JOIN address a ON a.addressid = o.addressid
+			JOIN phone ph ON ph.phoneid = o.phoneid
+			JOIN partyproduct pp ON pp.orderid = o.orderid
+		WHERE o.personid = #{personId} 
+			AND o.orderid NOT IN (SELECT orderid FROM purchase)
+	</select>
+	
+	<select id="getOrderSheetById" parameterType="long" resultMap="orderSheetMap">
+		SELECT o.orderid, o.personid, 
+			a.addressid, a.addressdetail, ph.phoneid, ph.phonenumber,
+			pp.productid, pp.quantity, pp.createdate
+		FROM ordersheet o
+			JOIN address a ON a.addressid = o.addressid
+			JOIN phone ph ON ph.phoneid = o.phoneid
+			JOIN partyproduct pp ON pp.orderid = o.orderid
+		WHERE o.orderid = #{orderId} 
+			AND o.orderid NOT IN (SELECT orderid FROM purchase)
+	</select>
+	
+	<delete id="deleteOrderSheet" parameterType="long">
+		DELETE FROM ordersheet
+		WHERE personid = #{personId} 
+			AND orderid NOT IN (SELECT orderid FROM purchase)
+	</delete>
+	
+	<!--  ============== OrderProduct 관련 질의문 ================  -->
+	
+	<update id="updateOrderIdOfOrderProduct" parameterType="PartyProductVO">
+		UPDATE partyproduct
+		SET orderid = #{orderId}, updatedate = SYSDATE
+		WHERE createdate = (
+			SELECT MIN(createdate)
+			FROM partyproduct
+			WHERE personid = #{personId}
+				AND productid = #{productId}
+				AND quantity = #{quantity}
+				AND orderid IS NULL
+		)
+	</update>
+	
+	<!--  ============== Purchase 관련 질의문 ================  -->
+	
+	<insert id="createPurchase" parameterType="long">
+	    INSERT INTO purchase (orderid, createdate, updatedate)
+	    VALUES (#{orderId}, SYSDATE, SYSDATE)
+	</insert>
+	
+	<!--  ============== Order 관련 질의문 ================  -->
+	
+	<resultMap id="orderMap" type="OrderSheetVO">
+		<id column="orderid" jdbcType="BIGINT" property="orderId" javaType="long" />
+		<result column="personid" jdbcType="BIGINT" property="personId" javaType="long" />
+		<result column="purchasedate" jdbcType="DATE" property="purchaseDate" javaType="string" />
+		<association property="addressVo" column="addressid" javaType="AddressVO">
+			<id column="addressid" jdbcType="BIGINT" property="addressId" javaType="long" />
+			<result column="addressdetail" jdbcType="VARCHAR" property="addressDetail" javaType="String" />
+		</association>
+		<association property="phoneVo" column="phoneid" javaType="PhoneVO">
+			<id column="phoneid" jdbcType="BIGINT" property="phoneId" javaType="long" />
+			<result column="phonenumber" jdbcType="VARCHAR" property="phoneNumber" javaType="String" />
+		</association>
+		<collection property="partyProductVoList" ofType="PartyProductVO">
+			<id column="createdate" jdbcType="DATE" property="createDate" javaType="string" />
+			<result column="productid" jdbcType="BIGINT" property="productId" javaType="long" />
+			<result column="quantity" jdbcType="BIGINT" property="quantity" javaType="long" />
+		</collection>
+	</resultMap>
+	
+	<select id="getOrderById" parameterType="long" resultMap="orderMap">
+		SELECT o.orderid, o.personid, pu.createdate AS purchasedate,
+			a.addressid, a.addressdetail, ph.phoneid, ph.phonenumber,
+			pp.productid, pp.quantity, pp.createdate
+		FROM ordersheet o
+			JOIN address a ON a.addressid = o.addressid
+			JOIN phone ph ON ph.phoneid = o.phoneid
+			JOIN partyproduct pp ON pp.orderid = o.orderid
+			JOIN purchase pu ON pu.orderid = o.orderid
+		WHERE o.orderid = #{orderId}
+	</select>
+	
+	<select id="getOrderByDate" resultMap="orderMap">
+		SELECT o.orderid, o.personid, pu.createdate AS purchasedate,
+			a.addressid, a.addressdetail, ph.phoneid, ph.phonenumber,
+			pp.productid, pp.quantity, pp.createdate
+		FROM ordersheet o
+			JOIN address a ON a.addressid = o.addressid
+			JOIN phone ph ON ph.phoneid = o.phoneid
+			JOIN partyproduct pp ON pp.orderid = o.orderid
+			JOIN purchase pu ON pu.orderid = o.orderid
+		WHERE o.personid = #{personId} 
+			AND INSTR(TO_CHAR(pu.createdate, 'YYYYMMDD'), #{date}) <![CDATA[>]]> 0
+	</select>
+	
+</mapper>

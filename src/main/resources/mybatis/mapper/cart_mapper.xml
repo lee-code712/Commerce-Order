@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.digital.v3.sql.mapper.CartMapper">
+
+	<insert id="createCartProduct" parameterType="PartyProductVO">
+	    INSERT INTO partyproduct (personid, productid, quantity, createdate, updatedate)
+	    VALUES (#{personId}, #{productId}, #{quantity}, SYSDATE, SYSDATE)
+	</insert>
+	
+	<select id="getCartProductByPerson" parameterType="long" resultType="PartyProductVO">
+		SELECT personid, productid, quantity, createdate
+		FROM partyproduct
+		WHERE personid = #{personId} AND orderid IS NULL
+	</select>
+	
+	<select id="isExistCartProduct" parameterType="PartyProductVO" resultType="int">
+		SELECT NVL(COUNT(createdate), 0)
+		FROM partyproduct
+		WHERE personid = #{personId} 
+			AND productid = #{productId}
+			AND quantity = #{quantity} 
+			AND orderid IS NULL
+	</select>
+	
+	<select id="getQuantityOfPluralCartProduct" parameterType="PartyProductVO" resultType="int">
+		SELECT NVL(SUM(quantity), 0)
+		FROM partyproduct
+		WHERE personid = #{personId} 
+			AND productid = #{productId} 
+			AND orderid IS NULL
+	</select>
+	
+	<delete id="deleteCartProduct" parameterType="PartyProductVO">
+		DELETE FROM partyproduct
+		WHERE createdate = (
+			SELECT MIN(createdate)
+			FROM partyproduct
+			WHERE personid = #{personId} 
+				AND productid = #{productId}
+				AND quantity = #{quantity} 
+				AND orderid IS NULL
+		)
+	</delete>
+	
+</mapper>
