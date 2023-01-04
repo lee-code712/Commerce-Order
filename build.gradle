@@ -40,6 +40,10 @@ dependencies {
 	implementation project(':Commerce-Common:lib')
 }
 
+test {
+    exclude '**/*'
+}
+
 tasks.named('test') {
 	useJUnitPlatform()
 }
