@@ -50,7 +50,7 @@ public class SwaggerConfig {
 	
 	private ApiInfo getApiInfo() {
         return new ApiInfoBuilder()
-        		.title("Order")
+        		.title("Order v2")
                 .description("Commerce Order API")
                 .build();
     }

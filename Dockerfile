@@ -18,4 +18,4 @@ WORKDIR /app/Commerce-Order
 RUN cd /app/Commerce-Order
 RUN gradle build
 
-CMD ["java", "-Djennifer.config=/app/agent/conf/order.conf","-javaagent:/app/agent/jennifer.jar", "-jar", "/app/Commerce-Order/build/libs/Commerce-Order-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-Djennifer.config=/app/agent/conf/order_v2.conf","-javaagent:/app/agent/jennifer.jar", "-jar", "/app/Commerce-Order/build/libs/Commerce-Order-0.0.1-SNAPSHOT.jar"]
