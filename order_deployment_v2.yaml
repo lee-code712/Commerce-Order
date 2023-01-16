@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    acornsoft.io/workload-group-no: "2"
+  generation: 1
+  name: commerce-yr-order-v2
+  namespace: commerce-yr
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: commerce-yr-order
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: commerce-yr-order
+        version: v2
+      annotations:
+        sidecar.istio.io/inject: "true"
+      creationTimestamp: null
+    spec:
+      containers:
+      - image: 192.168.100.12/commerce-yr/commerce-yr-order-img:order-1
+        imagePullPolicy: Always
+        name: commerce-yr-order-v2
+        securityContext:
+          capabilities: {}
+          privileged: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: false
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+      - name: commerce-cocktail-t8ceb0dry5v7
